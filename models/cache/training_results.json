@@ -1,0 +1,10 @@
+{
+  "test_mae_us": 16517.064338235345,
+  "test_rmse_us": 29473.1921357948,
+  "test_mape_pct": 3.175658770319873,
+  "best_val_loss": 0.00284369383007288,
+  "train_samples": 77,
+  "val_samples": 17,
+  "test_samples": 17,
+  "total_samples": 111
+}

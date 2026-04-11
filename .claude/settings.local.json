@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd D:/sikm/Desktop/PythonProject/FCT_optimization && rm -v scripts/preprocess_data.py scripts/train_models.py scripts/predict.py scripts/analyze_feature_correlation.py scripts/validate_data.py)",
+      "Bash(cd D:/sikm/Desktop/PythonProject/FCT_optimization && rm -rfv dataset/processed_data dataset/features)",
+      "Bash(cd D:/sikm/Desktop/PythonProject/FCT_optimization && rm -rfv models/saved_models)",
+      "Bash(cd D:/sikm/Desktop/PythonProject/FCT_optimization && ls -la analysis/ 2>/dev/null && rm -rfv analysis/* || echo \"analysis目录为空或不存在\")",
+      "WebSearch",
+      "Bash(ls -la \"D:\\\\sikm\\\\Desktop\\\\PythonProject\\\\FCT_optimization/scripts/\" | grep -E \"\\\\.py$\")",
+      "Bash(cd \"D:/sikm/Desktop/PythonProject/FCT_optimization/scripts\" && conda run -n clip_tsa python train_fct_predictor.py)",
+      "Bash(cd \"D:/sikm/Desktop/PythonProject/FCT_optimization/scripts\" && conda run -n clip_tsa python predict_optimal_threshold.py)",
+      "Bash(cd \"D:/sikm/Desktop/PythonProject/FCT_optimization\" && conda run -n clip_tsa python scripts/clean_csv.py)",
+      "Bash(cd \"D:/sikm/Desktop/PythonProject/FCT_optimization/dataset/raw_data\" && attrib -R *.csv && conda run -n clip_tsa python \"D:/sikm/Desktop/PythonProject/FCT_optimization/scripts/clean_csv.py\")",
+      "Bash(for f:*)",
+      "Bash(do echo:*)",
+      "Read(//d/sikm/Desktop/PythonProject/FCT_optimization/dataset/raw_data/**)",
+      "Bash(done)",
+      "Bash(wc -l /d/sikm/Desktop/PythonProject/FCT_optimization/dataset/cleaned_data/*.csv)",
+      "Bash(which claude-glm:*)",
+      "Bash(echo $PATH | tr ':' '\\\\n' | grep -i \"sikm\" | head -20)",
+      "Bash(python -c \"\nimport pandas as pd\nfor m in ['server', 'cache', 'search', 'mine']:\n    fp = f'D:/sikm/Desktop/PythonProject/FCT_optimization/dataset/cleaned_data/fct_result_{m}.csv'\n    df = pd.read_csv\\(fp\\)\n    print\\(f'=== {m} ==='\\)\n    print\\(f'  rows: {len\\(df\\)}'\\)\n    print\\(f'  t1_kb unique: {sorted\\(df.t1_kb.unique\\(\\)\\)}'\\)\n    print\\(f'  t2_kb unique: {sorted\\(df.t2_kb.unique\\(\\)\\)}'\\)\n    print\\(f'  load unique:  {sorted\\(df.load.unique\\(\\)\\)}'\\)\n    print\\(\\)\n\")",
+      "Bash(python -c \"\nconfig = {\n    'server': 65536,\n    'cache':  615 * 1024,\n    'search': 1.6 * 1024 * 1024,\n    'mine':   7.41 * 1024 * 1024,\n}\n\ndef route_model\\(avg_flow_size\\):\n    if avg_flow_size < 200 * 1024:\n        return 'server'\n    elif avg_flow_size < 1 * 1024 * 1024:\n        return 'cache'\n    elif avg_flow_size < 3 * 1024 * 1024:\n        return 'search'\n    else:\n        return 'mine'\n\nfor name, val in config.items\\(\\):\n    routed = route_model\\(val\\)\n    status = 'OK' if routed == name else 'MISMATCH'\n    print\\(f'{name:8s} avg_flow_size={val/1024:.1f} KB -> routes to {routed:8s} [{status}]'\\)\n\nprint\\(\\)\nprint\\('--- Boundary checks ---'\\)\nboundaries = [200*1024, 1*1024*1024, 3*1024*1024]\nfor b in boundaries:\n    print\\(f'  route_model\\({b}\\) = {route_model\\(b\\)}  \\(exactly at boundary\\)'\\)\n    print\\(f'  route_model\\({b-1}\\) = {route_model\\(b-1\\)}  \\(just below\\)'\\)\n\")",
+      "Bash(conda activate:*)",
+      "Bash(D:/Miniconda3/envs/clip_tsa/python.exe -c \"import torch; import torch.nn as nn; m = nn.Sequential\\(nn.Linear\\(2,4\\), nn.Linear\\(4,1\\)\\); out = m\\(torch.randn\\(1,2\\)\\); print\\(f'before squeeze: {out.shape}'\\); sq = out.squeeze\\(\\); print\\(f'after squeeze: {sq.shape}'\\); print\\(f'sq is scalar: {sq.dim\\(\\)==0}'\\)\")",
+      "Bash(wc -l D:/sikm/Desktop/PythonProject/FCT_optimization/dataset/cleaned_data/*.csv)",
+      "Bash(cd D:/sikm/Desktop/PythonProject/FCT_optimization/scripts && python train_fct_predictor.py)",
+      "Bash(cd D:/sikm/Desktop/PythonProject/FCT_optimization/scripts && D:/Miniconda3/envs/clip_tsa/python.exe train_fct_predictor.py)",
+      "Bash(cd D:/sikm/Desktop/PythonProject/FCT_optimization/scripts && D:/Miniconda3/envs/clip_tsa/python.exe predict_optimal_threshold.py)",
+      "Bash(cd D:/sikm/Desktop/PythonProject/FCT_optimization/scripts && D:/Miniconda3/envs/clip_tsa/python.exe eda.py)",
+      "Bash(rm -rf D:/sikm/Desktop/PythonProject/FCT_optimization/models/fct_predictor && rm -rf D:/sikm/Desktop/PythonProject/FCT_optimization/logs/train/20260402-101323 && echo \"删除完成\")",
+      "Bash(ls -la D:/sikm/Desktop/PythonProject/FCT_optimization/analysis/inference_results_*.json)",
+      "Bash(cd D:/sikm/Desktop/PythonProject/FCT_optimization/scripts && D:/Miniconda3/envs/clip_tsa/python.exe validate_inference.py)",
+      "Bash(cd D:/sikm/Desktop/PythonProject/FCT_optimization && conda activate clip_tsa && python scripts/merge_and_analyze.py)",
+      "Bash(D:/sikm/Desktop/PythonProject/FCT_optimization/scripts/merge_and_analyze.py)",
+      "Bash(where python:*)",
+      "Bash(D:/Miniconda3/python.exe D:/sikm/Desktop/PythonProject/FCT_optimization/scripts/merge_and_analyze.py)",
+      "Bash(D:\\\\Miniconda3\\\\python.exe data_statistics.py)",
+      "Bash(/d/Miniconda3/python.exe data_statistics.py)",
+      "Bash(/d/Miniconda3/python.exe:*)"
+    ]
+  }
+}

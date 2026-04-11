@@ -1,0 +1,182 @@
+[
+  {
+    "model": "server",
+    "avg_flow_size": 65536,
+    "load": 0.1,
+    "optimal_t1_kb": 250.0,
+    "t2_kb": 1024.0,
+    "predicted_fct_us": 18619.01,
+    "inference_time_ms": 1984.31
+  },
+  {
+    "model": "server",
+    "avg_flow_size": 65536,
+    "load": 0.3,
+    "optimal_t1_kb": 250.0,
+    "t2_kb": 1024.0,
+    "predicted_fct_us": 30254.86,
+    "inference_time_ms": 343.74
+  },
+  {
+    "model": "server",
+    "avg_flow_size": 65536,
+    "load": 0.5,
+    "optimal_t1_kb": 130.51,
+    "t2_kb": 1024.0,
+    "predicted_fct_us": 52512.66,
+    "inference_time_ms": 340.1
+  },
+  {
+    "model": "server",
+    "avg_flow_size": 65536,
+    "load": 0.7,
+    "optimal_t1_kb": 10.0,
+    "t2_kb": 1024.0,
+    "predicted_fct_us": 110818.9,
+    "inference_time_ms": 325.48
+  },
+  {
+    "model": "server",
+    "avg_flow_size": 65536,
+    "load": 0.9,
+    "optimal_t1_kb": 106.6,
+    "t2_kb": 1024.0,
+    "predicted_fct_us": 714658.55,
+    "inference_time_ms": 333.49
+  },
+  {
+    "model": "cache",
+    "avg_flow_size": 645120,
+    "load": 0.1,
+    "optimal_t1_kb": 250.0,
+    "t2_kb": 1024.0,
+    "predicted_fct_us": 141749.78,
+    "inference_time_ms": 340.12
+  },
+  {
+    "model": "cache",
+    "avg_flow_size": 645120,
+    "load": 0.3,
+    "optimal_t1_kb": 250.0,
+    "t2_kb": 1024.0,
+    "predicted_fct_us": 219474.67,
+    "inference_time_ms": 334.36
+  },
+  {
+    "model": "cache",
+    "avg_flow_size": 645120,
+    "load": 0.5,
+    "optimal_t1_kb": 163.27,
+    "t2_kb": 1024.0,
+    "predicted_fct_us": 409437.85,
+    "inference_time_ms": 330.82
+  },
+  {
+    "model": "cache",
+    "avg_flow_size": 645120,
+    "load": 0.7,
+    "optimal_t1_kb": 50.34,
+    "t2_kb": 1024.0,
+    "predicted_fct_us": 867746.22,
+    "inference_time_ms": 337.44
+  },
+  {
+    "model": "cache",
+    "avg_flow_size": 645120,
+    "load": 0.9,
+    "optimal_t1_kb": 62.48,
+    "t2_kb": 1024.0,
+    "predicted_fct_us": 2115732.89,
+    "inference_time_ms": 353.99
+  },
+  {
+    "model": "search",
+    "avg_flow_size": 1677721.6,
+    "load": 0.1,
+    "optimal_t2_kb": 1056.36,
+    "t1_kb": 100.0,
+    "predicted_fct_us": 434793.09,
+    "inference_time_ms": 350.9
+  },
+  {
+    "model": "search",
+    "avg_flow_size": 1677721.6,
+    "load": 0.3,
+    "optimal_t2_kb": 1244.93,
+    "t1_kb": 100.0,
+    "predicted_fct_us": 589155.61,
+    "inference_time_ms": 365.97
+  },
+  {
+    "model": "search",
+    "avg_flow_size": 1677721.6,
+    "load": 0.5,
+    "optimal_t2_kb": 729.15,
+    "t1_kb": 100.0,
+    "predicted_fct_us": 890060.66,
+    "inference_time_ms": 360.37
+  },
+  {
+    "model": "search",
+    "avg_flow_size": 1677721.6,
+    "load": 0.7,
+    "optimal_t2_kb": 644.42,
+    "t1_kb": 100.0,
+    "predicted_fct_us": 1520827.48,
+    "inference_time_ms": 383.56
+  },
+  {
+    "model": "search",
+    "avg_flow_size": 1677721.6,
+    "load": 0.9,
+    "optimal_t2_kb": 774.51,
+    "t1_kb": 100.0,
+    "predicted_fct_us": 2334478.07,
+    "inference_time_ms": 381.49
+  },
+  {
+    "model": "mine",
+    "avg_flow_size": 7759462.4,
+    "load": 0.1,
+    "optimal_t2_kb": 512.0,
+    "t1_kb": 100.0,
+    "predicted_fct_us": 1949874.42,
+    "inference_time_ms": 367.99
+  },
+  {
+    "model": "mine",
+    "avg_flow_size": 7759462.4,
+    "load": 0.3,
+    "optimal_t2_kb": 1346.67,
+    "t1_kb": 100.0,
+    "predicted_fct_us": 2297964.69,
+    "inference_time_ms": 379.93
+  },
+  {
+    "model": "mine",
+    "avg_flow_size": 7759462.4,
+    "load": 0.5,
+    "optimal_t2_kb": 1246.39,
+    "t1_kb": 100.0,
+    "predicted_fct_us": 2682153.43,
+    "inference_time_ms": 403.33
+  },
+  {
+    "model": "mine",
+    "avg_flow_size": 7759462.4,
+    "load": 0.7,
+    "optimal_t2_kb": 1297.89,
+    "t1_kb": 100.0,
+    "predicted_fct_us": 3218792.94,
+    "inference_time_ms": 401.95
+  },
+  {
+    "model": "mine",
+    "avg_flow_size": 7759462.4,
+    "load": 0.9,
+    "optimal_t2_kb": 1253.9,
+    "t1_kb": 100.0,
+    "predicted_fct_us": 3742435.84,
+    "inference_time_ms": 415.42
+  }
+]
