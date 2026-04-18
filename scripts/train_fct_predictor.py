@@ -18,13 +18,14 @@ FCT 子模型训练
 import pandas as pd
 import numpy as np
 import torch
+import matplotlib.pyplot as plt
+import swanlab
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import joblib
 import json
 from datetime import datetime
-from torch.utils.tensorboard import SummaryWriter
 
 from model import SubModel, MODEL_CONFIG, RAW_DATA_DIR, LOG_DIR, get_submodel_dir, MODEL_DIR, ANALYSIS_DIR
 
@@ -125,14 +126,37 @@ def train_submodel(model_name, X, y):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = SubModel(input_dim=2, hidden_dims=[64, 32], dropout_rate=0.2).to(device)
     print(f"  设备: {device}")
-    print(f"  模型: 2 -> [64, 32] -> 1")
+    print("  模型: 2 -> [64, 32] -> 1")
 
-    # 5. TensorBoard
-    train_log_dir = LOG_DIR / "train" / model_name / datetime.now().strftime("%Y%m%d-%H%M%S")
-    writer = SummaryWriter(log_dir=str(train_log_dir))
-
-    sample_input = torch.randn(1, 2).to(device)
-    writer.add_graph(model, sample_input)
+    # 5. SwanLab
+    run_timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    swan_log_dir = LOG_DIR / "train" / model_name / run_timestamp
+    run = swanlab.init(
+        project="fct-optimization-train",
+        experiment_name=f"{model_name}-{run_timestamp}",
+        tags=["train", model_name],
+        logdir=str(swan_log_dir),
+        config={
+            "model_name": model_name,
+            "input_dim": 2,
+            "hidden_dims": [64, 32],
+            "dropout_rate": 0.2,
+            "optimizer": "Adam",
+            "learning_rate": 0.001,
+            "weight_decay": 1e-5,
+            "scheduler": "ReduceLROnPlateau",
+            "scheduler_factor": 0.5,
+            "scheduler_patience": 20,
+            "early_stop_patience": 30,
+            "max_epoch": 500,
+            "batch_size": 32,
+            "train_samples": len(X_train),
+            "val_samples": len(X_val),
+            "test_samples": len(X_test),
+            "total_samples": len(X),
+        },
+        reinit=True,
+    )
 
     # 6. 训练
     criterion = torch.nn.MSELoss()
@@ -177,15 +201,27 @@ def train_submodel(model_name, X, y):
         scheduler.step(val_loss)
 
         # 日志
-        writer.add_scalars('loss', {'train': train_loss, 'val': val_loss}, epoch)
-        writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], epoch)
+        run.log(
+            {
+                "train/loss": train_loss,
+                "val/loss": val_loss,
+                "train/learning_rate": optimizer.param_groups[0]['lr'],
+            },
+            step=epoch,
+        )
         loss_history['train'].append(train_loss)
         loss_history['val'].append(val_loss)
 
-        # 权重直方图 (每 50 epoch)
+        # 权重统计 (每 50 epoch)
         if (epoch + 1) % 50 == 0:
             for name, param in model.named_parameters():
-                writer.add_histogram(f'weights/{name}', param, epoch)
+                run.log(
+                    {
+                        f"weights/{name}_mean": param.data.mean().item(),
+                        f"weights/{name}_std": param.data.std().item(),
+                    },
+                    step=epoch,
+                )
 
         # 早停 + 保存最佳模型
         if val_loss < best_val_loss:
@@ -226,10 +262,29 @@ def train_submodel(model_name, X, y):
     print(f"    RMSE: {rmse:.0f} us")
     print(f"    MAPE: {mape:.2f}%")
 
-    writer.add_scalar('test/MAE_us', mae, 0)
-    writer.add_scalar('test/RMSE_us', rmse, 0)
-    writer.add_scalar('test/MAPE_pct', mape, 0)
-    writer.close()
+    run.log(
+        {
+            "test/MAE_us": mae,
+            "test/RMSE_us": rmse,
+            "test/MAPE_pct": mape,
+            "test/best_val_loss": best_val_loss,
+        },
+        step=0,
+    )
+
+    # 记录训练过程图像
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.plot(loss_history["train"], label="train_loss")
+    ax.plot(loss_history["val"], label="val_loss")
+    ax.set_title(f"Loss Curve - {model_name}")
+    ax.set_xlabel("Epoch")
+    ax.set_ylabel("MSE Loss")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    run.log({"plots/loss_curve": swanlab.Image(fig)})
+    plt.close(fig)
+
+    run.finish()
 
     # 8. 保存 scaler 和结果
     joblib.dump(scaler_X, save_dir / "scaler_X.pkl")
@@ -351,7 +406,7 @@ def generate_training_report(data, train_results, full_pred_results, timestamp):
     report_path = ANALYSIS_DIR / f"training_report_{timestamp}.md"
 
     md = []
-    md.append(f"# FCT 子模型训练报告\n")
+    md.append("# FCT 子模型训练报告\n")
     md.append(f"**生成时间**: {timestamp}\n")
     md.append(f"**训练设备**: {'CUDA' if torch.cuda.is_available() else 'CPU'}\n")
     md.append("\n---\n")
@@ -425,8 +480,8 @@ def generate_training_report(data, train_results, full_pred_results, timestamp):
         md.append(f"### {model_name.upper()}\n")
         md.append(f"**整体指标**: MAE={m['mae']:.2f}us, RMSE={m['rmse']:.2f}us, MAPE={m['mape']:.2f}%\n\n")
 
-        md.append(f"| model | load | t1_kb | t2_kb | actual_fct | predicted_fct | error(%) |\n")
-        md.append(f"|-------|------|-------|-------|------------|---------------|----------|\n")
+        md.append("| model | load | t1_kb | t2_kb | actual_fct | predicted_fct | error(%) |\n")
+        md.append("|-------|------|-------|-------|------------|---------------|----------|\n")
 
         for row in rows:
             md.append(f"| {row['model']} | {row['load']:.1f} | {row['t1_kb']:.1f} | {row['t2_kb']:.1f} | "
@@ -474,14 +529,14 @@ def main():
               f"{r['test_mape_pct']:<10.2f} {r['total_samples']:<8}")
 
     print(f"\n模型保存目录: {MODEL_DIR}")
-    print(f"TensorBoard: tensorboard --logdir {LOG_DIR}")
+    print(f"SwanLab 本地日志目录: {LOG_DIR / 'train'}")
 
     # 4. 全数据集预测检验
     full_pred_results = predict_full_dataset(data)
 
     # 5. 生成 Markdown 报告
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    report_path = generate_training_report(data, all_results, full_pred_results, timestamp)
+    generate_training_report(data, all_results, full_pred_results, timestamp)
 
 
 if __name__ == "__main__":

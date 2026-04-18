@@ -10,13 +10,16 @@
 - 项目路径常量
 """
 
-import torch
+import os
 import torch.nn as nn
 from pathlib import Path
 
 # ==================== 路径配置 ====================
-BASE_DIR = Path(r"D:\sikm\Desktop\PythonProject\FCT_optimization")
-RAW_DATA_DIR = BASE_DIR / "dataset" / "all_data"
+BASE_DIR = Path(os.getenv("FCT_BASE_DIR", Path(__file__).resolve().parent.parent))
+DATASET_DIR = BASE_DIR / "dataset"
+RAW_DATA_DIR = DATASET_DIR / "all_data"
+CLEANED_DATA_DIR = DATASET_DIR / "cleaned_data"
+NEW_DATA_DIR = DATASET_DIR / "new_data"
 MODEL_DIR = BASE_DIR / "models"
 ANALYSIS_DIR = BASE_DIR / "analysis"
 LOG_DIR = BASE_DIR / "logs"

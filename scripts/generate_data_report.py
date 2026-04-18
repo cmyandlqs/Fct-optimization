@@ -5,7 +5,6 @@ FCT数据集统计报告生成脚本
 
 import pandas as pd
 from pathlib import Path
-from collections import defaultdict
 
 # 基础目录
 BASE_DIR = Path(__file__).parent.parent
@@ -118,18 +117,18 @@ def generate_markdown_report(analyses):
         lines.append(f"## {a['model'].upper()} 模型 - {model_cn}")
         lines.append("")
         lines.append(f"- **样本总数**: {a['total_rows']}")
-        lines.append(f"- **负载取值**: {', '.join([str(l) for l in a['loads']])}")
+        lines.append(f"- **负载取值**: {', '.join([str(load_value) for load_value in a['loads']])}")
         lines.append(f"- **变化阈值**: `{a['varying_threshold']}`")
         lines.append(f"- **固定阈值**: `{a['fixed_threshold']} = {a['fixed_value']}`")
         lines.append(f"- **变化阈值取值**: {', '.join([str(v) for v in a['varying_values']])} (共{len(a['varying_values'])}个值)")
         lines.append("")
-        lines.append(f"### FCT统计信息")
+        lines.append("### FCT统计信息")
         lines.append(f"- **最小值**: {a['fct_min']:.2f}")
         lines.append(f"- **最大值**: {a['fct_max']:.2f}")
         lines.append(f"- **平均值**: {a['fct_mean']:.2f}")
         lines.append("")
 
-        lines.append(f"### 各负载下的阈值取值")
+        lines.append("### 各负载下的阈值取值")
         lines.append("")
         lines.append("| 负载 | 阈值取值 | 数量 |")
         lines.append("|------|----------|------|")
@@ -196,7 +195,7 @@ def main():
     for a in analyses:
         print(f"\n{a['model'].upper()}:")
         print(f"  - 行数: {a['total_rows']}")
-        print(f"  - 负载数: {a['num_loads']} ({', '.join([str(l) for l in a['loads']])})")
+        print(f"  - 负载数: {a['num_loads']} ({', '.join([str(load_value) for load_value in a['loads']])})")
         print(f"  - 变化阈值: {a['varying_threshold']} ({len(a['varying_values'])}个值: {', '.join([str(v) for v in a['varying_values']])})")
         print(f"  - 固定阈值: {a['fixed_threshold']} = {a['fixed_value']}")
 

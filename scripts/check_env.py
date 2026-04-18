@@ -14,13 +14,13 @@ REQUIRED = {
     "matplotlib":       "matplotlib (绑图)",
     "seaborn":          "seaborn (统计可视化)",
     "joblib":           "joblib (保存 scaler)",
-    "tensorboard":      "tensorboard (训练日志可视化)",
+    "swanlab":          "swanlab (实验追踪与可视化)",
 }
 
 # import 名 -> pip 包名 的映射 (不一致的)
 PIP_NAME = {
     "sklearn": "scikit-learn",
-    "tensorboard": "tensorboard",
+    "swanlab": "swanlab",
 }
 
 def main():
@@ -41,7 +41,7 @@ def main():
 
     print("=" * 50)
     if missing:
-        print(f"\n安装缺失的库:")
+        print("\n安装缺失的库:")
         print(f"  pip install {' '.join(missing)}")
     else:
         print("\n所有依赖已满足。")

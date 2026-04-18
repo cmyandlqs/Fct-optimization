@@ -3,9 +3,7 @@
 """
 
 import pandas as pd
-import os
 from pathlib import Path
-from collections import defaultdict
 
 # 定义路径
 BASE_DIR = Path(__file__).parent.parent
@@ -110,7 +108,7 @@ def print_statistics(all_stats):
             print(f"\n固定阈值: {stats['fixed_column']}")
             print(f"  - 固定值: {stats['fixed_values']}")
             print(f"  - 是否恒定: {stats['fixed_is_constant']}")
-            print(f"\nFCT统计 (avg_fct):")
+            print("\nFCT统计 (avg_fct):")
             print(f"  - 最小值: {stats['fct']['min']:.2f}")
             print(f"  - 最大值: {stats['fct']['max']:.2f}")
             print(f"  - 平均值: {stats['fct']['mean']:.2f}")
@@ -150,7 +148,7 @@ def save_comparison_report(all_stats):
             report_lines.append("")
             report_lines.append(f"- **总行数**: {stats['total_rows']}")
             report_lines.append(f"- **负载列表**: {', '.join(map(str, stats['loads']))}")
-            report_lines.append(f"- **每个负载的样本数**:")
+            report_lines.append("- **每个负载的样本数**:")
             for load, count in stats['samples_per_load'].items():
                 report_lines.append(f"  - load={load}: {count} 个样本")
 
@@ -161,7 +159,7 @@ def save_comparison_report(all_stats):
 
             report_lines.append(f"- **固定阈值** ({stats['fixed_column']}): {stats['fixed_values']}")
 
-            report_lines.append(f"- **FCT统计**:")
+            report_lines.append("- **FCT统计**:")
             report_lines.append(f"  - 最小值: {stats['fct']['min']:.2f}")
             report_lines.append(f"  - 最大值: {stats['fct']['max']:.2f}")
             report_lines.append(f"  - 平均值: {stats['fct']['mean']:.2f}")

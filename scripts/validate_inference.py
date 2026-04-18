@@ -10,15 +10,12 @@
 """
 
 import pandas as pd
-import numpy as np
 import json
-from pathlib import Path
 from datetime import datetime
+from model import CLEANED_DATA_DIR, ANALYSIS_DIR
 
 # ==================== 路径配置 ====================
-BASE_DIR = Path(r"D:\sikm\Desktop\PythonProject\FCT_optimization")
-RAW_DATA_DIR = BASE_DIR / "dataset" / "cleaned_data"
-ANALYSIS_DIR = BASE_DIR / "analysis"
+RAW_DATA_DIR = CLEANED_DATA_DIR
 
 
 def load_all_data():
@@ -99,7 +96,7 @@ def generate_report(data, discrete_opt, inference_results, json_filename):
     report_path = ANALYSIS_DIR / f"validation_report_{timestamp}.md"
 
     md = []
-    md.append(f"# 推理验证报告\n")
+    md.append("# 推理验证报告\n")
     md.append(f"**生成时间**: {timestamp}\n")
     md.append(f"**推理结果文件**: {json_filename}\n")
     md.append("\n---\n")
@@ -153,20 +150,21 @@ def generate_report(data, discrete_opt, inference_results, json_filename):
 
     # 总体统计
     hit_rate_total = in_interval / total * 100 if total > 0 else 0
+    out_rate_total = out_interval / total * 100 if total > 0 else 0
     md.append("## 总体统计\n")
     md.append("\n")
-    md.append(f"| 指标 | 值 |\n")
-    md.append(f"|------|-----|\n")
+    md.append("| 指标 | 值 |\n")
+    md.append("|------|-----|\n")
     md.append(f"| 总场景数 | {total} |\n")
-    md.append(f"| 命中区间 | {in_interval} ({in_interval/total*100:.1f}%) |\n")
-    md.append(f"| 未命中区间 | {out_interval} ({out_interval/total*100:.1f}%) |\n")
+    md.append(f"| 命中区间 | {in_interval} ({hit_rate_total:.1f}%) |\n")
+    md.append(f"| 未命中区间 | {out_interval} ({out_rate_total:.1f}%) |\n")
     md.append("\n")
 
     # 详细对比表
     md.append("## 详细对比\n")
     md.append("\n")
-    md.append(f"| 模型 | load | 离散最优T | T区间 | 梯度下降T | 命中? |\n")
-    md.append(f"|------|------|-----------|-------|-----------|--------|\n")
+    md.append("| 模型 | load | 离散最优T | T区间 | 梯度下降T | 命中? |\n")
+    md.append("|------|------|-----------|-------|-----------|--------|\n")
 
     for model in ['server', 'cache', 'search', 'mine']:
         for load in sorted(discrete_opt[model].keys()):
@@ -223,8 +221,8 @@ def generate_report(data, discrete_opt, inference_results, json_filename):
             if opt_t is not None:
                 md.append(f"- 梯度下降结果: {opt_t:.1f} KB\n")
             else:
-                md.append(f"- 梯度下降结果: N/A\n")
-            md.append(f"- Top3 FCT 对应的阈值:\n")
+                md.append("- 梯度下降结果: N/A\n")
+            md.append("- Top3 FCT 对应的阈值:\n")
 
             for i, (t, fct) in enumerate(zip(opt['top3_t'], opt['top3_fct'])):
                 md.append(f"  {i+1}. T={t:.0f}KB, FCT={fct:.0f}us\n")
@@ -262,7 +260,7 @@ def main():
 
     # 4. 生成报告
     print("\n生成验证报告...")
-    report_path = generate_report(data, discrete_opt, inference_results, json_filename)
+    generate_report(data, discrete_opt, inference_results, json_filename)
 
     print("\n" + "=" * 60)
     print("完成")

@@ -11,15 +11,13 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from pathlib import Path
 import warnings
+from model import MODEL_CONFIG, RAW_DATA_DIR, ANALYSIS_DIR
 
 warnings.filterwarnings('ignore')
 
 plt.rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans']
 plt.rcParams['axes.unicode_minus'] = False
-
-from model import MODEL_CONFIG, RAW_DATA_DIR, ANALYSIS_DIR
 
 
 def load_raw_data():
@@ -60,7 +58,7 @@ def data_overview(df):
     else:
         print(f"\n缺失值:\n{missing[missing > 0]}")
 
-    print(f"\n基本统计:")
+    print("\n基本统计:")
     print(df[['t1_kb', 't2_kb', 'load', 'avg_fct']].describe().to_string())
 
 
@@ -95,7 +93,7 @@ def plot_feature_distributions(df):
 
     plt.tight_layout()
     plt.savefig(ANALYSIS_DIR / 'feature_distributions.png', dpi=300, bbox_inches='tight')
-    print(f"  -> feature_distributions.png")
+    print("  -> feature_distributions.png")
 
 
 def plot_fct_by_model_and_load(df):
@@ -127,7 +125,7 @@ def plot_fct_by_model_and_load(df):
 
     plt.tight_layout()
     plt.savefig(ANALYSIS_DIR / 'fct_vs_threshold_by_model.png', dpi=300, bbox_inches='tight')
-    print(f"  -> fct_vs_threshold_by_model.png")
+    print("  -> fct_vs_threshold_by_model.png")
 
 
 def plot_threshold_vs_load(df):
@@ -158,7 +156,7 @@ def plot_threshold_vs_load(df):
 
     plt.tight_layout()
     plt.savefig(ANALYSIS_DIR / 'best_threshold_vs_load.png', dpi=300, bbox_inches='tight')
-    print(f"  -> best_threshold_vs_load.png")
+    print("  -> best_threshold_vs_load.png")
 
 
 def plot_correlation_matrix(df):
@@ -185,7 +183,7 @@ def plot_correlation_matrix(df):
 
     plt.tight_layout()
     plt.savefig(ANALYSIS_DIR / 'correlation_matrix.png', dpi=300, bbox_inches='tight')
-    print(f"  -> correlation_matrix.png")
+    print("  -> correlation_matrix.png")
 
     # 打印相关性
     for model in models:
@@ -222,7 +220,7 @@ def plot_fct_distributions(df):
 
     plt.tight_layout()
     plt.savefig(ANALYSIS_DIR / 'fct_distributions.png', dpi=300, bbox_inches='tight')
-    print(f"  -> fct_distributions.png")
+    print("  -> fct_distributions.png")
 
 
 def main():

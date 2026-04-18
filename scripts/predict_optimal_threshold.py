@@ -18,11 +18,11 @@ import numpy as np
 import joblib
 import json
 import time
+import swanlab
 import matplotlib.pyplot as plt
 from datetime import datetime
-from torch.utils.tensorboard import SummaryWriter
 
-from model import SubModel, MODEL_CONFIG, MODEL_DIR, ANALYSIS_DIR, LOG_DIR, route_model, get_submodel_dir
+from model import SubModel, MODEL_CONFIG, ANALYSIS_DIR, LOG_DIR, route_model, get_submodel_dir
 
 
 class ThresholdOptimizer:
@@ -67,7 +67,7 @@ class ThresholdOptimizer:
         fct_us = np.exp(log_fct)
         return fct_us
 
-    def find_optimal(self, load, max_iter=100, lr=20.0, verbose=False, writer=None):
+    def find_optimal(self, load, max_iter=100, lr=20.0, verbose=False, run=None):
         """
         用梯度下降找最优阈值
 
@@ -128,10 +128,15 @@ class ThresholdOptimizer:
                 history['fct'].append(fct_us)
                 history['lr'].append(current_lr)
 
-                if writer is not None:
-                    writer.add_scalar(f'{self.model_name}/load_{load}/fct', fct_us, i)
-                    writer.add_scalar(f'{self.model_name}/load_{load}/threshold', T.item(), i)
-                    writer.add_scalar(f'{self.model_name}/load_{load}/lr', current_lr, i)
+                if run is not None:
+                    run.log(
+                        {
+                            f"{self.model_name}/load_{load}/fct_us": fct_us,
+                            f"{self.model_name}/load_{load}/threshold_kb": T.item(),
+                            f"{self.model_name}/load_{load}/learning_rate": current_lr,
+                        },
+                        step=i,
+                    )
 
                 # 早停判断
                 if fct_us < best_fct:
@@ -190,11 +195,24 @@ def main():
     print("最优阈值预测 - 门控路由 + 梯度下降优化")
     print("=" * 60)
 
-    # TensorBoard
-    inference_log_dir = LOG_DIR / "inference" / datetime.now().strftime("%Y%m%d-%H%M%S")
-    writer = SummaryWriter(log_dir=str(inference_log_dir))
-    print(f"TensorBoard 日志目录: {inference_log_dir}")
-    print(f"  启动: tensorboard --logdir {LOG_DIR}")
+    # SwanLab
+    run_timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    inference_log_dir = LOG_DIR / "inference" / run_timestamp
+    run = swanlab.init(
+        project="fct-optimization-inference",
+        experiment_name=f"inference-{run_timestamp}",
+        tags=["inference", "threshold-optimization"],
+        logdir=str(inference_log_dir),
+        config={
+            "optimizer": "Adam",
+            "learning_rate": 20.0,
+            "max_iter": 100,
+            "models": ["server", "cache", "search", "mine"],
+            "loads": [0.1, 0.3, 0.5, 0.7, 0.9],
+        },
+        reinit=True,
+    )
+    print(f"SwanLab 本地日志目录: {inference_log_dir}")
 
     # 测试场景: 4 个模型 × 5 个负载 = 20 个组合
     test_configs = [
@@ -215,31 +233,33 @@ def main():
 
     for model_name, avg_flow_size in test_configs:
         config = MODEL_CONFIG[model_name]
-        target = config['optimize'].upper()
         t_key = config['optimize']
+        optimizer = ThresholdOptimizer(model_name)
 
         print(f"\n{'=' * 60}")
         print(f"{model_name.upper()} 模型 (avg_flow_size={avg_flow_size / 1024:.0f}KB)")
         print(f"{'=' * 60}")
 
         for load_idx, load in enumerate(test_loads):
-            optimizer = ThresholdOptimizer(model_name)
-
             # 计时开始
             start_time = time.perf_counter()
-            t_opt, fct_opt, _ = optimizer.find_optimal(load, writer=writer)
+            t_opt, fct_opt, _ = optimizer.find_optimal(load, run=run)
             end_time = time.perf_counter()
             elapsed_ms = (end_time - start_time) * 1000
 
             timing_stats[model_name].append(elapsed_ms)
 
-            # 记录最优结果到 TensorBoard (使用 load_idx 作为 step，便于对比)
-            writer.add_scalar(f'{model_name}/optimal/threshold', t_opt, load_idx)
-            writer.add_scalar(f'{model_name}/optimal/fct', fct_opt, load_idx)
+            # 记录最优结果
+            run.log(
+                {
+                    f"{model_name}/optimal/threshold_kb": t_opt,
+                    f"{model_name}/optimal/fct_us": fct_opt,
+                    f"{model_name}/optimal/inference_time_ms": elapsed_ms,
+                },
+                step=load_idx,
+            )
 
             # 显示结果
-            fixed_key = list(config['fixed_threshold'].keys())[0]
-            fixed_val = list(config['fixed_threshold'].values())[0]
             print(f"  [{model_name.upper():6s}] load={load:.1f}, {t_key.upper()}={t_opt:.1f}KB, "
                   f"FCT={fct_opt:.0f}us ({fct_opt/1000:.2f}ms), time={elapsed_ms:.2f}ms")
 
@@ -311,8 +331,11 @@ def main():
         ax.grid(True, alpha=0.3)
 
     plt.tight_layout()
-    plt.savefig(ANALYSIS_DIR / "fct_response_curves.png", dpi=300, bbox_inches='tight')
-    print(f"  FCT 响应曲线: {ANALYSIS_DIR / 'fct_response_curves.png'}")
+    fct_curve_path = ANALYSIS_DIR / "fct_response_curves.png"
+    plt.savefig(fct_curve_path, dpi=300, bbox_inches='tight')
+    run.log({"plots/fct_response_curves": swanlab.Image(str(fct_curve_path))})
+    print(f"  FCT 响应曲线: {fct_curve_path}")
+    plt.close(fig)
 
     # 优化过程图 (以 cache 为例)
     print("\n生成优化过程图...")
@@ -340,10 +363,13 @@ def main():
     axes[2].grid(True, alpha=0.3)
 
     plt.tight_layout()
-    plt.savefig(ANALYSIS_DIR / "optimization_process.png", dpi=300, bbox_inches='tight')
-    print(f"  优化过程图: {ANALYSIS_DIR / 'optimization_process.png'}")
+    opt_process_path = ANALYSIS_DIR / "optimization_process.png"
+    plt.savefig(opt_process_path, dpi=300, bbox_inches='tight')
+    run.log({"plots/optimization_process": swanlab.Image(str(opt_process_path))})
+    print(f"  优化过程图: {opt_process_path}")
+    plt.close(fig)
 
-    writer.close()
+    run.finish()
 
     print("\n" + "=" * 60)
     print("分析完成")

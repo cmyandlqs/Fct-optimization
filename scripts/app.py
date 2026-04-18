@@ -14,7 +14,6 @@ import numpy as np
 import torch
 import joblib
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 # 将 scripts 目录加入 path，确保能 import model
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -59,7 +58,7 @@ def predict_fct(opt_data, t_value, load):
     """预测给定阈值和负载下的 FCT"""
     device = opt_data['device']
     features = np.array([[t_value, load]])
-    features_norm = opt_data['scaler_X'] if False else (features - opt_data['x_mean'].cpu().numpy()) / opt_data['x_std'].cpu().numpy()
+    features_norm = (features - opt_data['x_mean'].cpu().numpy()) / opt_data['x_std'].cpu().numpy()
 
     with torch.no_grad():
         features_tensor = torch.FloatTensor(features_norm).to(device)
@@ -191,7 +190,7 @@ fixed_key = list(config['fixed_threshold'].keys())[0]
 fixed_val = list(config['fixed_threshold'].values())[0]
 
 st.sidebar.markdown("---")
-st.sidebar.markdown(f"**模型信息**")
+st.sidebar.markdown("**模型信息**")
 st.sidebar.markdown(f"- 优化目标: `{t_key}`")
 st.sidebar.markdown(f"- 搜索范围: [{t_range[0]}, {t_range[1]}] KB")
 st.sidebar.markdown(f"- 固定: `{fixed_key}` = {fixed_val}")
