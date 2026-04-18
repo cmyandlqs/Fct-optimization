@@ -67,9 +67,14 @@ class ThresholdOptimizer:
         fct_us = np.exp(log_fct)
         return fct_us
 
-    def find_optimal(self, load, max_iter=200, lr=10.0, verbose=False, writer=None):
+    def find_optimal(self, load, max_iter=100, lr=20.0, verbose=False, writer=None):
         """
         用梯度下降找最优阈值
+
+        策略: Adam + ReduceLROnPlateau + 早停
+        - 初始学习率 20.0 快速靠近最优
+        - 损失停滞时自动缩小学习率，精调
+        - 连续 patience 步不改善则提前停止
 
         返回: (optimal_t, predicted_fct, history)
         """
@@ -82,7 +87,17 @@ class ThresholdOptimizer:
         load_tensor = torch.tensor([load], device=self.device)
 
         optimizer = torch.optim.Adam([T], lr=lr)
-        history = {'t': [], 'fct': []}
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer, mode='min', factor=0.5, patience=10, min_lr=0.1
+        )
+
+        history = {'t': [], 'fct': [], 'lr': []}
+
+        # 早停参数
+        best_fct = float('inf')
+        best_t = t_init
+        no_improve_count = 0
+        early_stop_patience = 20
 
         for i in range(max_iter):
             optimizer.zero_grad()
@@ -108,22 +123,39 @@ class ThresholdOptimizer:
                 y_val = y_norm.item()
                 log_fct = y_val * self.y_std + self.y_mean
                 fct_us = np.exp(log_fct)
+                current_lr = optimizer.param_groups[0]['lr']
                 history['t'].append(T.item())
                 history['fct'].append(fct_us)
+                history['lr'].append(current_lr)
 
                 if writer is not None:
                     writer.add_scalar(f'{self.model_name}/load_{load}/fct', fct_us, i)
                     writer.add_scalar(f'{self.model_name}/load_{load}/threshold', T.item(), i)
+                    writer.add_scalar(f'{self.model_name}/load_{load}/lr', current_lr, i)
 
-            if verbose and (i + 1) % 50 == 0:
-                print(f"  Iter {i + 1:3d}: T={T.item():.1f}KB, FCT={fct_us:.0f}us")
+                # 早停判断
+                if fct_us < best_fct:
+                    best_fct = fct_us
+                    best_t = T.item()
+                    no_improve_count = 0
+                else:
+                    no_improve_count += 1
 
-        t_opt = T.item()
-        fct_opt = self.predict_fct(t_opt, load)
+            # 学习率调度 (基于 loss)
+            scheduler.step(loss.item())
 
-        # 不在这里写入 optimal 结果，改在 main 中按负载索引写入
+            if verbose and (i + 1) % 20 == 0:
+                print(f"  Iter {i + 1:3d}: T={T.item():.1f}KB, FCT={fct_us:.0f}us, lr={current_lr:.2f}")
 
-        return t_opt, fct_opt, history
+            # 早停触发
+            if no_improve_count >= early_stop_patience:
+                if verbose:
+                    print(f"  早停于第 {i + 1} 步 (连续 {early_stop_patience} 步无改善)")
+                break
+
+        fct_opt = self.predict_fct(best_t, load)
+
+        return best_t, fct_opt, history
 
 
 def find_optimal_threshold(avg_flow_size, load):
@@ -285,9 +317,9 @@ def main():
     # 优化过程图 (以 cache 为例)
     print("\n生成优化过程图...")
     opt = ThresholdOptimizer('cache')
-    t_opt, fct_opt, history = opt.find_optimal(0.5, max_iter=200, lr=10.0)
+    t_opt, fct_opt, history = opt.find_optimal(0.5, max_iter=100, lr=20.0)
 
-    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+    fig, axes = plt.subplots(1, 3, figsize=(16, 4))
 
     axes[0].plot(history['fct'])
     axes[0].set_title('FCT Optimization (CACHE, load=0.5)')
@@ -300,6 +332,12 @@ def main():
     axes[1].set_xlabel('Iteration')
     axes[1].set_ylabel('T1 (KB)')
     axes[1].grid(True, alpha=0.3)
+
+    axes[2].plot(history['lr'])
+    axes[2].set_title('Learning Rate Schedule')
+    axes[2].set_xlabel('Iteration')
+    axes[2].set_ylabel('Learning Rate')
+    axes[2].grid(True, alpha=0.3)
 
     plt.tight_layout()
     plt.savefig(ANALYSIS_DIR / "optimization_process.png", dpi=300, bbox_inches='tight')

@@ -27,12 +27,7 @@ No package manager config or test framework.
 
 以后运行 conda 命令时使用这个路径：
 
-  & D:\Miniconda3\shell\condabin\conda-hook.ps1
-  conda activate clip_tsa
-
-  或者直接用完整路径执行 Python：
-
-  D:\Miniconda3\python.exe your_script.py
+D:\Miniconda3\envs\clip_tsa\python.exe
 
 ## Architecture
 
