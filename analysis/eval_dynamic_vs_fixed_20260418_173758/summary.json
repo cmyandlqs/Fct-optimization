@@ -1,0 +1,58 @@
+{
+  "inference_file": "/home/sikm/Project/Fct-optimization/analysis/inference_results_20260418_170008.json",
+  "overall": {
+    "avg_improve_pct": 3.7186288766789892,
+    "median_improve_pct": 2.0866056892036404,
+    "win_rate": 0.65,
+    "win": 13,
+    "total": 20,
+    "best_improve_pct": 26.13194614127708,
+    "worst_improve_pct": -15.227470020360437
+  },
+  "by_model": {
+    "server": {
+      "avg_improve_pct": 11.066037166060008,
+      "median_improve_pct": 12.001193432272714,
+      "win_rate": 0.8,
+      "win": 4,
+      "total": 5,
+      "best_improve_pct": 26.13194614127708,
+      "worst_improve_pct": -5.45613224988845
+    },
+    "cache": {
+      "avg_improve_pct": 8.240843993438734,
+      "median_improve_pct": 5.868596177706098,
+      "win_rate": 1.0,
+      "win": 5,
+      "total": 5,
+      "best_improve_pct": 21.969650338517017,
+      "worst_improve_pct": 0.7059801058991904
+    },
+    "search": {
+      "avg_improve_pct": -1.2274021581624361,
+      "median_improve_pct": -2.3325721956823338,
+      "win_rate": 0.4,
+      "win": 2,
+      "total": 5,
+      "best_improve_pct": 4.039086045868596,
+      "worst_improve_pct": -5.09989563383629
+    },
+    "mine": {
+      "avg_improve_pct": -3.204963494620351,
+      "median_improve_pct": -0.14338988628370491,
+      "win_rate": 0.4,
+      "win": 2,
+      "total": 5,
+      "best_improve_pct": 3.8248531786841586,
+      "worst_improve_pct": -15.227470020360437
+    }
+  },
+  "notes": {
+    "dynamic_fct_source": "predicted_fct_us from inference_results",
+    "dynamic_real_fct": "not available yet, left blank",
+    "baseline_policy": {
+      "server_cache": "t1_kb=100, t2_kb=1024",
+      "search_mine": "t1_kb=100, t2_kb=1024"
+    }
+  }
+}

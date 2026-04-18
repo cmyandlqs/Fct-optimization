@@ -15,7 +15,7 @@
 
 ---
 
-## 2. 解决的问题与方法（含数学原理）
+## 2. 解决的问题与方法
 
 ### 2.1 问题定义
 
@@ -30,13 +30,9 @@
 T^* = \arg\min_{T \in [T_{min}, T_{max}]} \hat f_m(T, load)
 \]
 
-符号定义：
-1. \(T^*\)：最优阈值（单位 KB）。
-2. \(T\)：待优化阈值变量（单位 KB）。
-3. \([T_{min}, T_{max}]\)：阈值可行区间（由模型配置给定）。
-4. \(load\)：网络负载（无量纲，取值在 0 到 1）。
-5. \(m\)：子模型索引，由 `route_model(avg_flow_size)` 决定。
-6. \(\hat f_m(\cdot)\)：第 \(m\) 个子模型预测的 FCT 函数（输出单位 us）。
+其中：
+1. \(m\) 是由门控函数 `route_model(avg_flow_size)` 选择的子模型。
+2. \(\hat f_m\) 是神经网络学习得到的 FCT 预测函数（单位 us）。
 
 ### 2.2 门控路由
 
@@ -44,16 +40,6 @@ T^* = \arg\min_{T \in [T_{min}, T_{max}]} \hat f_m(T, load)
 m = \text{route}(avg\_flow\_size)
 \]
 
-符号定义：
-1. \(avg\_flow\_size\)：平均流大小（单位 Byte）。
-2. \(\text{route}(\cdot)\)：基于流大小区间的门控函数。
-3. \(m\)：被选中的子模型标签，取值为 `{server, cache, search, mine}`。
-
-路由规则：
-1. `< 200KB -> server`
-2. `200KB ~ 1MB -> cache`
-3. `1MB ~ 3MB -> search`
-4. `> 3MB -> mine`
 
 ### 2.3 训练目标（监督回归）
 
@@ -67,11 +53,7 @@ m = \text{route}(avg\_flow\_size)
 \mathcal{L}(\theta)=\frac{1}{N}\sum_{i=1}^{N}(\hat z_i-z_i)^2
 \]
 
-符号定义：
-1. \(\theta\)：子模型参数。
-2. \(N\)：训练样本数。
-3. \(z_i\)：第 \(i\) 个样本真实值，定义为 `log(FCT)` 经过标准化后的结果。
-4. \(\hat z_i\)：模型对第 \(i\) 个样本的预测值（与 \(z_i\) 同尺度）。
+其中 \(z\) 是 `log(FCT)` 经过 `StandardScaler` 后的值。
 
 ### 2.4 推理优化（可微搜索）
 
@@ -82,28 +64,23 @@ T_{k+1} = \Pi_{[T_{min},T_{max}]}
 \big(T_k - \eta \nabla_T \hat f_m(T_k, load)\big)
 \]
 
-符号定义：
-1. \(k\)：迭代步索引。
-2. \(T_k, T_{k+1}\)：第 \(k\) 步与第 \(k+1\) 步的阈值。
-3. \(\eta\)：学习率。
-4. \(\nabla_T \hat f_m(T_k, load)\)：目标函数对阈值 \(T\) 的梯度。
-5. \(\Pi_{[T_{min}, T_{max}]}\)：区间投影算子（Π 表示区间投影，代码中由 `clamp_` 实现）。
+其中 \(\Pi\) 表示区间投影（代码中用 `clamp_` 实现）。
 
 ### 2.5 过程示意图
 
 ```mermaid
-flowchart LR;
-  A["Input avg_flow_size and load"] --> B["Route model"];
-  B --> C1["Server submodel"];
-  B --> C2["Cache submodel"];
-  B --> C3["Search submodel"];
-  B --> C4["Mine submodel"];
-  C1 --> D["Differentiable objective"];
-  C2 --> D;
-  C3 --> D;
-  C4 --> D;
-  D --> E["Adam optimization with clamp"];
-  E --> F["Output optimal threshold and FCT"];
+flowchart LR
+A[输入: avg_flow_size, load] --> B[门控路由 route_model]
+B --> C1[server 子模型]
+B --> C2[cache 子模型]
+B --> C3[search 子模型]
+B --> C4[mine 子模型]
+C1 --> D["构造可微目标 FCT_hat(T, load)"]
+C2 --> D
+C3 --> D
+C4 --> D
+D --> E[Adam 优化 T + 区间约束]
+E --> F[输出最优阈值 T* 与预测 FCT]
 ```
 
 ---
@@ -143,9 +120,13 @@ flowchart LR;
 ### 3.4 推理优化配置
 
 1. 优化器：Adam
-2. 初始学习率：`20.0`
-3. 最大迭代：`100`
-4. 早停：连续 `20` 步无改进
+2. Warm Start：维护 `(model, load_bin) -> T_init` 表（`analysis/warm_start_table.json`）
+3. 参数策略：
+   - warm_start 命中：`lr=8.0`, `max_iter=60`
+   - warm_start 未命中：`lr=20.0`, `max_iter=100`
+4. 早停：
+   - 连续无改善早停
+   - 梯度与 `ΔT/ΔFCT` 稳定收敛早停
 5. 阈值范围：
    - server/cache：`[10, 250] KB`
    - search/mine：`[512, 2048] KB`
@@ -178,16 +159,16 @@ flowchart LR;
 
 ### 4.2 推理优化结果摘要
 
-> 来源：`analysis/inference_results_20260418_170008.json`
+> 来源：`analysis/inference_results_20260418_183524.json`
 
 | 模型 | 平均推理耗时 (ms) | 最小/最大耗时 (ms) | 预测FCT范围 (ms) |
 |------|------------------|--------------------|------------------|
-| server | 25.35 | 22.40 / 31.21 | 22.86 ~ 643.89 |
-| cache  | 27.57 | 22.92 / 34.86 | 153.90 ~ 2050.70 |
-| search | 33.60 | 20.13 / 45.01 | 402.96 ~ 2481.18 |
-| mine   | 38.75 | 22.33 / 61.47 | 1954.60 ~ 3773.28 |
+| server | 11.43 | 10.51 / 13.39 | 22.86 ~ 643.89 |
+| cache  | 18.65 | 10.27 / 36.14 | 153.60 ~ 2050.70 |
+| search | 12.58 | 10.92 / 14.16 | 402.96 ~ 2481.06 |
+| mine   | 12.66 | 10.63 / 16.90 | 1954.53 ~ 3773.31 |
 
-总体平均推理耗时：`31.32 ms`（20 个场景平均）。
+总体平均推理耗时：`13.83 ms`（20 个场景平均）。
 
 ### 4.3 可视化产物
 
@@ -219,6 +200,7 @@ Fct-optimization/
 │   ├── model.py
 │   ├── train_fct_predictor.py
 │   ├── predict_optimal_threshold.py
+│   ├── evaluate_dynamic_vs_fixed.py
 │   ├── app.py
 │   ├── eda.py
 │   └── check_env.py
@@ -273,6 +255,7 @@ print(result)
 
 ## 8. 后续改进方向
 
-1. 增加 `mine` 场景数据量，降低高负载区间误差。
-2. 引入不确定性估计（如 MC Dropout/深度集成），给出阈值建议置信区间。
-3. 将门控路由从硬阈值升级为可学习分类器，减少边界样本误路由风险。
+1. 测量动态最优阈值对应的真实 FCT（当前评估中动态侧以预测值为主）。
+2. 补足样本较少场景的数据（重点：`search`、`mine`）。
+3. 引入不确定性估计（如 MC Dropout/深度集成），给出阈值建议置信区间。
+4. 将门控路由从硬阈值升级为可学习分类器，减少边界样本误路由风险。

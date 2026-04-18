@@ -1,0 +1,80 @@
+{
+  "config": {
+    "phase": "v2",
+    "models": [
+      "server",
+      "cache",
+      "search",
+      "mine"
+    ],
+    "loads": [
+      0.1,
+      0.2,
+      0.3,
+      0.4,
+      0.5,
+      0.6,
+      0.7,
+      0.8,
+      0.9
+    ],
+    "force_recompute": false,
+    "inference_file_arg": ""
+  },
+  "inference_source": "/home/sikm/Project/Fct-optimization/analysis/inference_results_20260418_170008.json",
+  "overall": {
+    "avg_improve_pct": 4.069259471159808,
+    "median_improve_pct": 2.0866056892036404,
+    "win_rate": 0.6666666666666666,
+    "win": 24,
+    "total": 36,
+    "best_improve_pct": 26.13194614127708,
+    "worst_improve_pct": -15.227470020360437
+  },
+  "by_model": {
+    "server": {
+      "avg_improve_pct": 12.107330904635827,
+      "median_improve_pct": 12.563053578419225,
+      "win_rate": 0.8888888888888888,
+      "win": 8,
+      "total": 9,
+      "best_improve_pct": 26.13194614127708,
+      "worst_improve_pct": -5.45613224988845
+    },
+    "cache": {
+      "avg_improve_pct": 6.1495890899957475,
+      "median_improve_pct": 2.4440329194790955,
+      "win_rate": 1.0,
+      "win": 9,
+      "total": 9,
+      "best_improve_pct": 21.969650338517017,
+      "worst_improve_pct": 0.7059801058991904
+    },
+    "search": {
+      "avg_improve_pct": -0.5916004013687279,
+      "median_improve_pct": -1.8635115346958768,
+      "win_rate": 0.3333333333333333,
+      "win": 3,
+      "total": 9,
+      "best_improve_pct": 6.404614199381388,
+      "worst_improve_pct": -5.09989563383629
+    },
+    "mine": {
+      "avg_improve_pct": -1.3882817086236199,
+      "median_improve_pct": -0.14338988628370491,
+      "win_rate": 0.4444444444444444,
+      "win": 4,
+      "total": 9,
+      "best_improve_pct": 7.072045497748274,
+      "worst_improve_pct": -15.227470020360437
+    }
+  },
+  "notes": {
+    "dynamic_fct_source": "predicted_fct_us (from inference json or recomputed)",
+    "dynamic_real_fct": "not available yet, left blank",
+    "baseline_policy": {
+      "server_cache": "t1_kb=100, t2_kb=1024",
+      "search_mine": "t1_kb=100, t2_kb=1024"
+    }
+  }
+}

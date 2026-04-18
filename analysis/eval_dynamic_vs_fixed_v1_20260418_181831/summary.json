@@ -1,0 +1,60 @@
+{
+  "config": {
+    "phase": "v1",
+    "models": [
+      "server",
+      "cache"
+    ],
+    "loads": [
+      0.1,
+      0.2,
+      0.3,
+      0.4,
+      0.5,
+      0.6,
+      0.7,
+      0.8,
+      0.9
+    ],
+    "force_recompute": false,
+    "inference_file_arg": ""
+  },
+  "inference_source": "/home/sikm/Project/Fct-optimization/analysis/inference_results_20260418_170008.json",
+  "overall": {
+    "avg_improve_pct": 9.12845999731579,
+    "median_improve_pct": 9.641191373936636,
+    "win_rate": 0.9444444444444444,
+    "win": 17,
+    "total": 18,
+    "best_improve_pct": 26.13194614127708,
+    "worst_improve_pct": -5.45613224988845
+  },
+  "by_model": {
+    "server": {
+      "avg_improve_pct": 12.107330904635827,
+      "median_improve_pct": 12.563053578419225,
+      "win_rate": 0.8888888888888888,
+      "win": 8,
+      "total": 9,
+      "best_improve_pct": 26.13194614127708,
+      "worst_improve_pct": -5.45613224988845
+    },
+    "cache": {
+      "avg_improve_pct": 6.1495890899957475,
+      "median_improve_pct": 2.4440329194790955,
+      "win_rate": 1.0,
+      "win": 9,
+      "total": 9,
+      "best_improve_pct": 21.969650338517017,
+      "worst_improve_pct": 0.7059801058991904
+    }
+  },
+  "notes": {
+    "dynamic_fct_source": "predicted_fct_us (from inference json or recomputed)",
+    "dynamic_real_fct": "not available yet, left blank",
+    "baseline_policy": {
+      "server_cache": "t1_kb=100, t2_kb=1024",
+      "search_mine": "t1_kb=100, t2_kb=1024"
+    }
+  }
+}

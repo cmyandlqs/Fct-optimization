@@ -8,26 +8,25 @@ FCT (Flow Completion Time) optimization for network scheduling thresholds. 4 ind
 
 ## Commands
 
-Run from `scripts/` directory using conda env `clip_tsa`:
+Run from `scripts/` directory using conda env `DL`:
 
 ```bash
-conda activate clip_tsa
+conda activate DL
 cd scripts
 python train_fct_predictor.py          # Train 4 sub-models
 python predict_optimal_threshold.py    # Inference via routing + gradient descent
 python eda.py                          # EDA charts to analysis/
-tensorboard --logdir ../logs           # View TensorBoard (http://localhost:6006)
+python evaluate_dynamic_vs_fixed.py --phase v1  # Eval (server/cache)
+python evaluate_dynamic_vs_fixed.py --phase v2  # Eval (all 4 models)
 ```
 
 ### Dependencies
 
-PyTorch, pandas, numpy, scikit-learn, matplotlib, seaborn, joblib, tensorboard (all in `clip_tsa` conda env).
+PyTorch, pandas, numpy, scikit-learn, matplotlib, seaborn, joblib, swanlab (all in `DL` conda env).
 
 No package manager config or test framework.
 
-以后运行 conda 命令时使用这个路径：
-
-D:\Miniconda3\envs\clip_tsa\python.exe
+Inference logs and metrics are tracked by SwanLab (with local logs under `logs/`).
 
 ## Architecture
 
@@ -97,7 +96,11 @@ optimizer = ThresholdOptimizer(model_name)
 t_opt, fct_opt, history = optimizer.find_optimal(load)
 ```
 
-Gradient descent over learnable T through the trained sub-model. Uses PyTorch-native standardization `(x - mean) / std` to preserve gradient graph. Adam with lr=10, 200 iterations, clamps to valid range.
+Gradient descent over learnable T through the trained sub-model. Uses PyTorch-native standardization `(x - mean) / std` to preserve gradient graph. Current inference adds:
+- Warm Start table: `analysis/warm_start_table.json`
+- Warm-start hit: lower lr / fewer max_iter for faster and stabler convergence
+- Midpoint fallback: larger lr / more max_iter
+- Early-stop by both no-improve and convergence stability
 
 ### Traffic Model Config (MODEL_CONFIG)
 
@@ -137,8 +140,8 @@ models/
     training_results.json
     loss_history.json
 logs/
-  train/{model_name}/{timestamp}/     # TensorBoard training logs per sub-model
-  inference/{timestamp}/              # TensorBoard inference logs
+  train/{model_name}/{timestamp}/     # SwanLab local logs per sub-model
+  inference/{timestamp}/              # SwanLab local logs for inference
 analysis/
   inference_results_<ts>.json         # Timestamped inference results
   fct_response_curves.png             # Per-model FCT vs T curves
@@ -147,9 +150,14 @@ analysis/
 
 ### Key Design Decisions
 
-- `BASE_DIR` is hardcoded to `D:\sikm\Desktop\PythonProject\FCT_optimization`
+- `BASE_DIR` defaults to repo root and supports override via `FCT_BASE_DIR`
 - log transform on `FCT` (target only; inputs are raw T_kb and load values)
 - Both X and y are standardized with StandardScaler for stable training
 - Inference uses manual `(x - mean) / std` in PyTorch to keep autograd graph intact
 - 4 sub-models are completely independent — no shared weights or scalers
 - Gate routing based on avg_flow_size thresholds, no ML-based routing needed
+
+### TODO
+
+1. Measure real FCT for dynamic optimal thresholds (not only predicted FCT).
+2. Add more data for low-sample scenarios (`search`, `mine`).

@@ -1,0 +1,222 @@
+[
+  {
+    "model": "server",
+    "avg_flow_size": 65536,
+    "load": 0.1,
+    "optimal_t1_kb": 250.0,
+    "t2_kb": 1024.0,
+    "predicted_fct_us": 22858.13,
+    "inference_time_ms": 22.89,
+    "init_source": "midpoint",
+    "init_t_kb": null
+  },
+  {
+    "model": "server",
+    "avg_flow_size": 65536,
+    "load": 0.3,
+    "optimal_t1_kb": 100.67,
+    "t2_kb": 1024.0,
+    "predicted_fct_us": 35307.62,
+    "inference_time_ms": 32.55,
+    "init_source": "midpoint",
+    "init_t_kb": null
+  },
+  {
+    "model": "server",
+    "avg_flow_size": 65536,
+    "load": 0.5,
+    "optimal_t1_kb": 250.0,
+    "t2_kb": 1024.0,
+    "predicted_fct_us": 46725.15,
+    "inference_time_ms": 20.92,
+    "init_source": "midpoint",
+    "init_t_kb": null
+  },
+  {
+    "model": "server",
+    "avg_flow_size": 65536,
+    "load": 0.7,
+    "optimal_t1_kb": 250.0,
+    "t2_kb": 1024.0,
+    "predicted_fct_us": 106765.63,
+    "inference_time_ms": 22.5,
+    "init_source": "midpoint",
+    "init_t_kb": null
+  },
+  {
+    "model": "server",
+    "avg_flow_size": 65536,
+    "load": 0.9,
+    "optimal_t1_kb": 250.0,
+    "t2_kb": 1024.0,
+    "predicted_fct_us": 643893.99,
+    "inference_time_ms": 22.62,
+    "init_source": "midpoint",
+    "init_t_kb": null
+  },
+  {
+    "model": "cache",
+    "avg_flow_size": 645120,
+    "load": 0.1,
+    "optimal_t1_kb": 205.49,
+    "t2_kb": 1024.0,
+    "predicted_fct_us": 153897.62,
+    "inference_time_ms": 32.76,
+    "init_source": "midpoint",
+    "init_t_kb": null
+  },
+  {
+    "model": "cache",
+    "avg_flow_size": 645120,
+    "load": 0.3,
+    "optimal_t1_kb": 135.93,
+    "t2_kb": 1024.0,
+    "predicted_fct_us": 250834.17,
+    "inference_time_ms": 26.56,
+    "init_source": "midpoint",
+    "init_t_kb": null
+  },
+  {
+    "model": "cache",
+    "avg_flow_size": 645120,
+    "load": 0.5,
+    "optimal_t1_kb": 64.8,
+    "t2_kb": 1024.0,
+    "predicted_fct_us": 410277.19,
+    "inference_time_ms": 29.28,
+    "init_source": "midpoint",
+    "init_t_kb": null
+  },
+  {
+    "model": "cache",
+    "avg_flow_size": 645120,
+    "load": 0.7,
+    "optimal_t1_kb": 10.0,
+    "t2_kb": 1024.0,
+    "predicted_fct_us": 837391.82,
+    "inference_time_ms": 22.26,
+    "init_source": "midpoint",
+    "init_t_kb": null
+  },
+  {
+    "model": "cache",
+    "avg_flow_size": 645120,
+    "load": 0.9,
+    "optimal_t1_kb": 10.0,
+    "t2_kb": 1024.0,
+    "predicted_fct_us": 2050704.41,
+    "inference_time_ms": 23.64,
+    "init_source": "midpoint",
+    "init_t_kb": null
+  },
+  {
+    "model": "search",
+    "avg_flow_size": 1677721.6,
+    "load": 0.1,
+    "optimal_t2_kb": 2048.0,
+    "t1_kb": 100.0,
+    "predicted_fct_us": 402960.73,
+    "inference_time_ms": 44.93,
+    "init_source": "midpoint",
+    "init_t_kb": null
+  },
+  {
+    "model": "search",
+    "avg_flow_size": 1677721.6,
+    "load": 0.3,
+    "optimal_t2_kb": 1316.01,
+    "t1_kb": 100.0,
+    "predicted_fct_us": 592189.15,
+    "inference_time_ms": 45.6,
+    "init_source": "midpoint",
+    "init_t_kb": null
+  },
+  {
+    "model": "search",
+    "avg_flow_size": 1677721.6,
+    "load": 0.5,
+    "optimal_t2_kb": 1186.06,
+    "t1_kb": 100.0,
+    "predicted_fct_us": 905139.03,
+    "inference_time_ms": 20.5,
+    "init_source": "midpoint",
+    "init_t_kb": null
+  },
+  {
+    "model": "search",
+    "avg_flow_size": 1677721.6,
+    "load": 0.7,
+    "optimal_t2_kb": 1050.75,
+    "t1_kb": 100.0,
+    "predicted_fct_us": 1519305.67,
+    "inference_time_ms": 27.74,
+    "init_source": "midpoint",
+    "init_t_kb": null
+  },
+  {
+    "model": "search",
+    "avg_flow_size": 1677721.6,
+    "load": 0.9,
+    "optimal_t2_kb": 1045.97,
+    "t1_kb": 100.0,
+    "predicted_fct_us": 2481177.38,
+    "inference_time_ms": 27.75,
+    "init_source": "midpoint",
+    "init_t_kb": null
+  },
+  {
+    "model": "mine",
+    "avg_flow_size": 7759462.4,
+    "load": 0.1,
+    "optimal_t2_kb": 1593.7,
+    "t1_kb": 100.0,
+    "predicted_fct_us": 1954603.09,
+    "inference_time_ms": 30.17,
+    "init_source": "midpoint",
+    "init_t_kb": null
+  },
+  {
+    "model": "mine",
+    "avg_flow_size": 7759462.4,
+    "load": 0.3,
+    "optimal_t2_kb": 1243.76,
+    "t1_kb": 100.0,
+    "predicted_fct_us": 2263913.77,
+    "inference_time_ms": 56.28,
+    "init_source": "midpoint",
+    "init_t_kb": null
+  },
+  {
+    "model": "mine",
+    "avg_flow_size": 7759462.4,
+    "load": 0.5,
+    "optimal_t2_kb": 1117.5,
+    "t1_kb": 100.0,
+    "predicted_fct_us": 2673137.12,
+    "inference_time_ms": 21.52,
+    "init_source": "midpoint",
+    "init_t_kb": null
+  },
+  {
+    "model": "mine",
+    "avg_flow_size": 7759462.4,
+    "load": 0.7,
+    "optimal_t2_kb": 1223.02,
+    "t1_kb": 100.0,
+    "predicted_fct_us": 3208364.84,
+    "inference_time_ms": 60.97,
+    "init_source": "midpoint",
+    "init_t_kb": null
+  },
+  {
+    "model": "mine",
+    "avg_flow_size": 7759462.4,
+    "load": 0.9,
+    "optimal_t2_kb": 1155.59,
+    "t1_kb": 100.0,
+    "predicted_fct_us": 3773278.39,
+    "inference_time_ms": 22.01,
+    "init_source": "midpoint",
+    "init_t_kb": null
+  }
+]

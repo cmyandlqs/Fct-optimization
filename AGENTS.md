@@ -7,18 +7,17 @@ Core code lives in `scripts/`:
 - `predict_optimal_threshold.py`: inference + gradient-descent threshold optimization.
 - `check_env.py`, `eda.py`, and data utilities support setup and analysis.
 
-Data is under `dataset/` (`raw_data/`, `cleaned_data/`, `all_data/`, `new_data/`). Trained artifacts are saved to `models/<model_name>/`. Plots and reports go to `analysis/`. TensorBoard logs go to `logs/train/` and `logs/inference/`.
+Data is under `dataset/` (`raw_data/`, `cleaned_data/`, `all_data/`, `new_data/`). Trained artifacts are saved to `models/<model_name>/`. Plots and reports go to `analysis/`. SwanLab local run logs go to `logs/train/` and `logs/inference/`.
 
 ## Build, Test, and Development Commands
-Use conda env `clip_tsa`, then run from `scripts/`:
+Use conda env `DL`, then run from `scripts/`:
 ```bash
-conda activate clip_tsa
+conda activate DL
 cd scripts
 python check_env.py                  # Validate runtime dependencies
 python train_fct_predictor.py        # Train and save 4 sub-models
 python predict_optimal_threshold.py  # Run threshold optimization inference
 python eda.py                        # Generate exploratory charts in analysis/
-tensorboard --logdir ../logs         # Inspect train/inference metrics
 ```
 
 ## Coding Style & Naming Conventions
@@ -46,4 +45,8 @@ PRs should include:
 - Linked issue or experiment context when applicable.
 
 ## Configuration Tips
-`BASE_DIR` is currently hardcoded in `scripts/model.py`. If you move the repository, update this path first to avoid broken data/model lookups.
+`BASE_DIR` defaults to repo root in `scripts/model.py` and can be overridden via env var `FCT_BASE_DIR`.
+
+## TODO
+1. Measure real FCT values for dynamic optimal thresholds (not only predicted FCT).
+2. Add more samples for low-data scenarios (`search`, `mine`).

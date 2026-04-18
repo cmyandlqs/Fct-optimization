@@ -25,6 +25,44 @@ from datetime import datetime
 from model import SubModel, MODEL_CONFIG, ANALYSIS_DIR, LOG_DIR, route_model, get_submodel_dir
 
 
+class WarmStartTable:
+    """维护 (model, load_bin) -> t_init 的持久化表。"""
+
+    def __init__(self, path, bin_step=0.1):
+        self.path = path
+        self.bin_step = float(bin_step)
+        self.data = self._load()
+
+    def _load(self):
+        if not self.path.exists():
+            return {}
+        try:
+            with open(self.path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if isinstance(data, dict):
+                return data
+        except Exception:
+            pass
+        return {}
+
+    def _bin_load(self, load):
+        binned = round(round(float(load) / self.bin_step) * self.bin_step, 3)
+        return f"{binned:.3f}"
+
+    def get(self, model_name, load):
+        load_key = self._bin_load(load)
+        return self.data.get(model_name, {}).get(load_key)
+
+    def set(self, model_name, load, t_value):
+        load_key = self._bin_load(load)
+        self.data.setdefault(model_name, {})[load_key] = float(t_value)
+
+    def save(self):
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        with open(self.path, "w", encoding="utf-8") as f:
+            json.dump(self.data, f, indent=2, ensure_ascii=False)
+
+
 class ThresholdOptimizer:
     """阈值优化器: 用梯度下降在子模型上寻找最优阈值"""
 
@@ -67,7 +105,20 @@ class ThresholdOptimizer:
         fct_us = np.exp(log_fct)
         return fct_us
 
-    def find_optimal(self, load, max_iter=100, lr=20.0, verbose=False, run=None):
+    def find_optimal(
+        self,
+        load,
+        max_iter=100,
+        lr=20.0,
+        verbose=False,
+        run=None,
+        t_init=None,
+        early_stop_patience=20,
+        grad_tol=1e-4,
+        delta_t_tol=0.05,
+        delta_fct_tol=50.0,
+        stable_patience=6,
+    ):
         """
         用梯度下降找最优阈值
 
@@ -79,7 +130,9 @@ class ThresholdOptimizer:
         返回: (optimal_t, predicted_fct, history)
         """
         t_range = self.config['t_range']
-        t_init = (t_range[0] + t_range[1]) / 2
+        if t_init is None:
+            t_init = (t_range[0] + t_range[1]) / 2
+        t_init = float(np.clip(t_init, t_range[0], t_range[1]))
 
         # 可学习的阈值参数
         T = torch.tensor([t_init], requires_grad=True, device=self.device)
@@ -88,7 +141,7 @@ class ThresholdOptimizer:
 
         optimizer = torch.optim.Adam([T], lr=lr)
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer, mode='min', factor=0.5, patience=10, min_lr=0.1
+            optimizer, mode='min', factor=0.5, patience=8, min_lr=0.1
         )
 
         history = {'t': [], 'fct': [], 'lr': []}
@@ -97,7 +150,9 @@ class ThresholdOptimizer:
         best_fct = float('inf')
         best_t = t_init
         no_improve_count = 0
-        early_stop_patience = 20
+        prev_t = None
+        prev_fct = None
+        stable_count = 0
 
         for i in range(max_iter):
             optimizer.zero_grad()
@@ -112,6 +167,7 @@ class ThresholdOptimizer:
             loss = y_norm
 
             loss.backward()
+            grad_abs = abs(T.grad.item()) if T.grad is not None else 0.0
             optimizer.step()
 
             # 约束范围
@@ -146,6 +202,16 @@ class ThresholdOptimizer:
                 else:
                     no_improve_count += 1
 
+                if prev_t is not None and prev_fct is not None:
+                    delta_t = abs(T.item() - prev_t)
+                    delta_fct = abs(fct_us - prev_fct)
+                    if grad_abs < grad_tol and delta_t < delta_t_tol and delta_fct < delta_fct_tol:
+                        stable_count += 1
+                    else:
+                        stable_count = 0
+                prev_t = T.item()
+                prev_fct = fct_us
+
             # 学习率调度 (基于 loss)
             scheduler.step(loss.item())
 
@@ -156,6 +222,10 @@ class ThresholdOptimizer:
             if no_improve_count >= early_stop_patience:
                 if verbose:
                     print(f"  早停于第 {i + 1} 步 (连续 {early_stop_patience} 步无改善)")
+                break
+            if stable_count >= stable_patience:
+                if verbose:
+                    print(f"  收敛早停于第 {i + 1} 步 (梯度与变化量持续稳定)")
                 break
 
         fct_opt = self.predict_fct(best_t, load)
@@ -221,8 +291,10 @@ def main():
         logdir=str(inference_log_dir),
         config={
             "optimizer": "Adam",
-            "learning_rate": 20.0,
-            "max_iter": 100,
+            "midpoint_lr": 20.0,
+            "midpoint_max_iter": 100,
+            "warm_start_lr": 8.0,
+            "warm_start_max_iter": 60,
             "models": ["server", "cache", "search", "mine"],
             "loads": [0.1, 0.3, 0.5, 0.7, 0.9],
         },
@@ -239,6 +311,9 @@ def main():
     ]
     test_loads = [0.1, 0.3, 0.5, 0.7, 0.9]
     optimizers = {model_name: ThresholdOptimizer(model_name) for model_name, _ in test_configs}
+    warm_table_path = ANALYSIS_DIR / "warm_start_table.json"
+    warm_table = WarmStartTable(warm_table_path, bin_step=0.1)
+    print(f"Warm Start 表: {warm_table_path}")
 
     # 冷启动预热：不计时，不记录日志
     warmup_optimizers(optimizers)
@@ -261,11 +336,30 @@ def main():
         print(f"{'=' * 60}")
 
         for load_idx, load in enumerate(test_loads):
+            t_init = warm_table.get(model_name, load)
+            init_source = "warm_start" if t_init is not None else "midpoint"
+            if init_source == "warm_start":
+                lr = 8.0
+                max_iter = 60
+                early_stop_patience = 12
+            else:
+                lr = 20.0
+                max_iter = 100
+                early_stop_patience = 20
+
             # 计时开始
             start_time = time.perf_counter()
-            t_opt, fct_opt, _ = optimizer.find_optimal(load, run=run)
+            t_opt, fct_opt, history = optimizer.find_optimal(
+                load,
+                run=run,
+                t_init=t_init,
+                lr=lr,
+                max_iter=max_iter,
+                early_stop_patience=early_stop_patience,
+            )
             end_time = time.perf_counter()
             elapsed_ms = (end_time - start_time) * 1000
+            warm_table.set(model_name, load, t_opt)
 
             timing_stats[model_name].append(elapsed_ms)
 
@@ -275,13 +369,15 @@ def main():
                     f"{model_name}/optimal/threshold_kb": t_opt,
                     f"{model_name}/optimal/fct_us": fct_opt,
                     f"{model_name}/optimal/inference_time_ms": elapsed_ms,
+                    f"{model_name}/optimal/iterations": len(history["t"]),
                 },
                 step=load_idx,
             )
 
             # 显示结果
             print(f"  [{model_name.upper():6s}] load={load:.1f}, {t_key.upper()}={t_opt:.1f}KB, "
-                  f"FCT={fct_opt:.0f}us ({fct_opt/1000:.2f}ms), time={elapsed_ms:.2f}ms")
+                  f"FCT={fct_opt:.0f}us ({fct_opt/1000:.2f}ms), time={elapsed_ms:.2f}ms, "
+                  f"iter={len(history['t'])}, init={init_source}, lr={lr}")
 
             inference_results.append({
                 'model': model_name,
@@ -291,6 +387,10 @@ def main():
                 **{k: v for k, v in config['fixed_threshold'].items()},
                 'predicted_fct_us': round(fct_opt, 2),
                 'inference_time_ms': round(elapsed_ms, 2),
+                'iterations': len(history['t']),
+                'init_source': init_source,
+                'init_t_kb': round(t_init, 2) if t_init is not None else None,
+                'lr': lr,
             })
 
     # 推理耗时汇总
@@ -313,6 +413,8 @@ def main():
     with open(results_path, 'w') as f:
         json.dump(inference_results, f, indent=2, ensure_ascii=False)
     print(f"\n推理结果保存到: {results_path}")
+    warm_table.save()
+    print(f"Warm Start 表已更新: {warm_table_path}")
 
     # 可视化: 各模型的 FCT 响应曲线
     print("\n" + "=" * 60)
