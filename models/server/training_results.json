@@ -1,8 +1,8 @@
 {
-  "test_mae_us": 8455.643161764705,
-  "test_rmse_us": 16735.16733534777,
-  "test_mape_pct": 6.7710925695453925,
-  "best_val_loss": 0.005179380066692829,
+  "test_mae_us": 6401.964995404396,
+  "test_rmse_us": 15974.792605889297,
+  "test_mape_pct": 4.37791658359707,
+  "best_val_loss": 0.002081720158457756,
   "train_samples": 75,
   "val_samples": 16,
   "test_samples": 17,

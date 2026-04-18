@@ -190,6 +190,22 @@ def find_optimal_threshold(avg_flow_size, load):
     return result, fct_opt
 
 
+def warmup_optimizers(optimizers):
+    """
+    预热模型与算子缓存。
+    预热阶段不计时，也不写入实验日志。
+    """
+    print("\n开始预热（不计时、不记录日志）...")
+    for model_name, optimizer in optimizers.items():
+        try:
+            # 使用中等负载做一次完整优化，触发前向/反向与调度器初始化
+            optimizer.find_optimal(load=0.5, max_iter=30, lr=20.0, run=None)
+            print(f"  预热完成: {model_name}")
+        except Exception as e:
+            # 预热失败不应中断主流程，正式推理阶段仍可继续
+            print(f"  预热失败: {model_name} ({e})")
+
+
 def main():
     print("=" * 60)
     print("最优阈值预测 - 门控路由 + 梯度下降优化")
@@ -222,6 +238,10 @@ def main():
         ('mine',   7.4 * 1024 * 1024),  # 7.4 MB
     ]
     test_loads = [0.1, 0.3, 0.5, 0.7, 0.9]
+    optimizers = {model_name: ThresholdOptimizer(model_name) for model_name, _ in test_configs}
+
+    # 冷启动预热：不计时，不记录日志
+    warmup_optimizers(optimizers)
 
     print("\n" + "=" * 60)
     print("预测结果")
@@ -234,7 +254,7 @@ def main():
     for model_name, avg_flow_size in test_configs:
         config = MODEL_CONFIG[model_name]
         t_key = config['optimize']
-        optimizer = ThresholdOptimizer(model_name)
+        optimizer = optimizers[model_name]
 
         print(f"\n{'=' * 60}")
         print(f"{model_name.upper()} 模型 (avg_flow_size={avg_flow_size / 1024:.0f}KB)")
